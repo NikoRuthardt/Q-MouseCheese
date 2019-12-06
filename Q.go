@@ -27,23 +27,25 @@ func NewAgent(actions int) *Agent {
 	return &Agent{
 		QTable:  map[State][]float64{},
 		ε:       1,
-		α:       0.2,
+		α:       0.3,
 		γ:       0.8,
 		actions: actions,
 	}
 }
 
 func (a *Agent) updateQ(state State, action int, reward float64, newState State) {
+
+	oldQ, _ := maxDir(a.getActions(state))
 	optimalFuture, _ := maxDir(a.getActions(newState))
 	/*** Q-Function ***/
 	/* new Q[s,a] = (1 - α) * Q[s,a] + α * (reward + γ * optimalFuture) */
-	a.QTable[state][action] = (1-a.α)*a.QTable[state][action] + a.α*(reward+a.γ*optimalFuture)
+	a.QTable[state][action] = (1-a.α)*oldQ + a.α*(reward+a.γ*optimalFuture)
 }
 
 func (a *Agent) chooseAction(state State) (int, float64) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	a.ε = math.Max(a.ε*0.999, a.ε*0.001) //let ε --> go slowly to  0
+	a.ε = math.Max(a.ε*0.995, a.ε*0.005) //let ε --> go slowly to  0
 
 	if rand.Float64() < a.ε {
 		return rand.Intn(a.actions), a.ε // choose random Action
@@ -64,10 +66,10 @@ func (a *Agent) getActions(state State) []float64 {
 }
 
 func maxDir(actions []float64) (float64, int) {
+	rand.Seed(time.Now().UTC().UnixNano())
 	// choose max "direction" from actions
-	max := actions[1] // -> 0 UP, 1 Down, 2 Right, 3 Left
-	index := 1
-	/* if all equal choose down */
+	max := actions[0] // -> 0 UP, 1 Down, 2 Right, 3 Left
+	index := 0
 	for i, a := range actions {
 		if a > max {
 			max = a
